@@ -24,9 +24,11 @@ class Game:
         self.state_best_move_map = {self.BLANK_CELL_CHAR * 9: {self.comp: ('02', 0)}}
 
     def _all_elem_same(self, row):
+        """ Returns if all elements in given list are same and not blank """
         return len(set(row)) == 1 and row[0] != self.BLANK_CELL_CHAR
 
     def get_board_state(self):
+        """ Returns serialized game state to be used for caching """
 
         board_state = ''
         for i in range(0, 3):
@@ -34,6 +36,7 @@ class Game:
         return board_state
 
     def get_board_state_pretty(self):
+        """ Returns game board state in pretty format to be used by game-managers """
 
         board_state = ''
         for i in range(0, 3):
@@ -84,6 +87,10 @@ class Game:
         return winner
 
     def get_best_move(self, curr_player, orig_player, depth=0, alpha=-100, beta=100):
+        """
+        Returns a tuple consisting of the best move along-with the best score for current player
+        in current game state
+        """
 
         best_move, best_score = None, 0
         is_over, winner = self.is_over()
@@ -94,6 +101,7 @@ class Game:
         if current_board_state_best_move_score:
             return current_board_state_best_move_score
 
+        # If game is over return the score
         if is_over:
             self.LEAF_COUNT += 1
             if winner:
@@ -102,20 +110,25 @@ class Game:
 
         opponent = self.human if curr_player == self.comp else self.comp
 
+        # Else find the move with best score.
         for move in list(self.available_moves):
 
             self.play_move(move, curr_player)
             _, score = self.get_best_move(opponent, orig_player, depth=depth+1, alpha=alpha, beta=beta)
 
+            # If move is for orig-player, max score move will be best move.
             if best_move is None or (curr_player == orig_player and score > best_score):
                 best_move, best_score = move, score
                 alpha = max(alpha, best_score)
+            # If move is not for orig-player, min score move will be best move.
             elif best_move is None or (curr_player != orig_player and score < best_score):
                 best_move, best_score = move, score
                 beta = min(beta, best_score)
 
             self.undo_move(move)
 
+            # If the maximum harm (-ve score) the opponent can do is less than the minimum benefit (+ve score) the
+            # current player has, no need to check other moves as the opponent can not do better.
             if beta <= alpha:
                 break
 
@@ -124,6 +137,7 @@ class Game:
         return best_move, best_score
 
     def play_move(self, move, player):
+        """ Validates and makes the given move for given player """
         if move in self.available_moves:
             self.available_moves.remove(move)
             self.board[move] = player
@@ -131,6 +145,7 @@ class Game:
             raise ValueError('Move [{} - {}] not possible.'.format(move, player))
 
     def undo_move(self, move):
+        """ Validates and undoes the given move """
         if move in self.board:
             self.board[move] = self.BLANK_CELL_CHAR
             self.available_moves.add(move)
@@ -138,17 +153,22 @@ class Game:
             raise ValueError('Move-undo [{}] not possible.'.format(move))
 
     def is_over(self):
+        """
+        Returns tuple consisting of flag represneting whether games is over along-with the winner of the game if any
+        """
         winner = self.get_winner()
         status = bool(winner or not self.available_moves)
         return status, winner
 
 
 class GameManager:
+    """ A class to manage a TicTacToe game """
 
     def __init__(self, *args, **kwargs):
         self.game = None
 
     def start_game(self, **kwargs):
+        """ starts a new game """
         self.game = Game(player=kwargs.get('player', 'x'))
         if input('Would you like to go first? y/n\n') == 'y':
             self.play_human_move()
@@ -156,6 +176,7 @@ class GameManager:
             self.play_comp_move()
 
     def play_comp_move(self):
+        """ Plays computer move and decides further """
         print('Comp thinking...')
         self.game.LEAF_COUNT = 0
         self.game.play_move(self.game.get_best_move(self.game.comp, self.game.comp, 0)[0], self.game.comp)
@@ -163,6 +184,7 @@ class GameManager:
         self.check_status(self.game.human)
 
     def play_human_move(self, error=''):
+        """ Takes input from user and plays human move and decides further """
         print('{}Make your next move...'.format(error))
         move = str(input())
         try:
@@ -172,6 +194,7 @@ class GameManager:
         self.check_status(self.game.comp)
 
     def check_status(self, next_player):
+        """ Check what should be done after a move and proceeds accordingly """
         print(self.game.get_board_state_pretty())
         status, winner = self.game.is_over()
         if status:
