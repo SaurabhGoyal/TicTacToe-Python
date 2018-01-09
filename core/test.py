@@ -1,4 +1,4 @@
-from TicTacToe import *
+from core.game_manager import GameManager
 
 
 # game = Game()

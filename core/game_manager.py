@@ -1,4 +1,4 @@
-
+from core.game import Game
 
 
 class GameManager:
@@ -13,9 +13,9 @@ class GameManager:
         if input('Would you like to go first? y/n\n') == 'y':
             self.play_human_move()
         else:
-            self.play_comp_move()
+            self._play_comp_move()
 
-    def play_comp_move(self):
+    def _play_comp_move(self):
         """ Plays computer move and decides further """
         print('Comp thinking...')
         self.game.LEAF_COUNT = 0
@@ -49,6 +49,6 @@ class GameManager:
                 self.start_game()
         else:
             if next_player == self.game.comp:
-                self.play_comp_move()
+                self._play_comp_move()
             else:
                 self.play_human_move()
