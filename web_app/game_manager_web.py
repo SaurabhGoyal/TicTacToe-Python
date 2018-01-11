@@ -17,7 +17,7 @@ class GameManagerWeb:
 
     def start_game(self, player, first_turn, **kwargs):
         """ starts a new game """
-        self.game = Game(player=player)
+        self.game = Game(human=player)
         if first_turn:
             self.status = self.GAME_STATUS_HUMAN_MOVE_REQUIRED
             return self.check_status(self.game.human, {'status': True, 'info': ''})

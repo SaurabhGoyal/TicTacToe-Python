@@ -2,7 +2,7 @@ import json
 
 from flask import Flask, request
 
-from game_manager_web import GameManagerWeb
+from game_manager_dialogflow import GameManagerDialogFlow
 
 
 app = Flask(__name__)
@@ -14,62 +14,41 @@ def home():
     return 'Welcome to TicTacToe world.'
 
 
-@app.route('/start')
-def start_game():
-    user_id = request.args.get('user_id', 1123)
-    player_symbol = request.args.get('player_symbol', 'x')
-    first_turn = request.args.get('first_turn') or False
-    gmw = GameManagerWeb()
-    game_manager_map[user_id] = gmw
-    res_s, res_d = gmw.start_game(player=player_symbol, first_turn=first_turn)
-    response = app.response_class(
-        response=json.dumps(res_d),
-        status=res_s,
-        mimetype='application/json'
-    )
-    return response
+df_game_manager_map = {}
 
 
-@app.route('/make-move')
-def make_move():
-    user_id = request.args.get('user_id', 1123)
-    move = request.args.get('move')
-    gmw = game_manager_map.get(user_id)
+@app.route('/dialogflow-handler', methods=['POST'])
+def dialogflow_handler():
 
-    if not gmw:
-        res_s, res_d = 400, {'messages': ['No active game for this user.']}
-    else:
-        if not gmw.status == GameManagerWeb.GAME_STATUS_HUMAN_MOVE_REQUIRED:
-            res_s, res_d = 400, {'game_status': gmw.status, 'messages': ['Invalid action.']}
+    req_data = json.loads(request.data)['result']
+    # print(1212, request.data)
+    action = req_data['action']
+    parameters = req_data['parameters']
+    if action == 'start-game':
+        user_id = parameters.get('username')
+        player_symbol = parameters.get('player-symbol', 'x')
+        first_turn = parameters.get('first-turn') == 'yes'
+        gmdf = GameManagerDialogFlow()
+        df_game_manager_map[user_id] = gmdf
+        print(1313, user_id, player_symbol, first_turn)
+        messages = gmdf.start_game(player=player_symbol, first_turn=first_turn)
+        print(1414, messages)
+
+    elif action == 'make-move':
+        user_id = req_data.get('contexts')[0]['parameters']['username']
+        move = parameters.get('move-location')
+        print(2323, user_id, move)
+        if user_id in df_game_manager_map:
+            gmdf = df_game_manager_map[user_id]
+            messages = gmdf.play_human_move(move=move)
         else:
-            res_s, res_d = gmw.play_human_move(move=move)
+            messages = ['No active game for user.']
+        print(2424, messages)
+
+    # msg = messages[0]
 
     response = app.response_class(
-        response=json.dumps(res_d),
-        status=res_s,
-        mimetype='application/json'
-    )
-    return response
-
-
-@app.route('/dragonflow-handler', methods=['POST'])
-def dragonflow_handler():
-
-    print(1212, request.data)
-    req_data = json.loads(request.data)
-    user_id = req_data.get('username')
-    player_symbol = req_data.get('player_symbol', 'x')
-    first_turn = req_data.get('first_turn') == 'yes'
-    gmw = GameManagerWeb()
-    game_manager_map[user_id] = gmw
-    res_s, res_d = gmw.start_game(player=player_symbol, first_turn=first_turn)
-
-    print(1313, res_s, res_d)
-
-    msg = res_d['messages'][0]
-
-    response = app.response_class(
-        response=json.dumps({'speech': msg, 'display_text': msg}),
+        response=json.dumps({'speech': '', 'messages': [{'type': 0, 'speech': msg} for msg in messages]}),
         status=200,
         mimetype='application/json'
     )

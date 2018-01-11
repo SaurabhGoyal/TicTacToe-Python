@@ -25,6 +25,9 @@ class GameManagerService:
         self.game = None
         self.status = None
 
+    def get_game_status_message(self):
+        return self.status_code_message_map[self.status]
+
     def start_game(self, player, first_turn, **kwargs):
         """ starts a new game """
 
