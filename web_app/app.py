@@ -50,3 +50,27 @@ def make_move():
         mimetype='application/json'
     )
     return response
+
+
+@app.route('/dragonflow-handler', methods=['POST'])
+def dragonflow_handler():
+
+    print(1212, request.data)
+    req_data = json.loads(request.data)
+    user_id = req_data.get('username')
+    player_symbol = req_data.get('player_symbol', 'x')
+    first_turn = req_data.get('first_turn') == 'yes'
+    gmw = GameManagerWeb()
+    game_manager_map[user_id] = gmw
+    res_s, res_d = gmw.start_game(player=player_symbol, first_turn=first_turn)
+
+    print(1313, res_s, res_d)
+
+    msg = res_d['messages'][0]
+
+    response = app.response_class(
+        response=json.dumps({'speech': msg, 'display_text': msg}),
+        status=200,
+        mimetype='application/json'
+    )
+    return response
