@@ -1,54 +1,44 @@
-from core.game import Game
+from core import constants as core_constants
+from core.game_manager_service import GameManagerService
 
 
-class GameManager:
-    """ A class to manage a TicTacToe game """
+class GameManagerCLI:
+    """ A class to manage a TicTacToe game in CLI """
 
-    def __init__(self, *args, **kwargs):
-        self.game = None
+    def __init__(self, **kwargs):
+        self.gms = GameManagerService()
 
     def start_game(self, **kwargs):
         """ starts a new game """
-        self.game = Game(player=kwargs.get('player', 'x'))
-        if input('Would you like to go first? y/n\n') == 'y':
-            self.play_human_move()
-        else:
-            self._play_comp_move()
 
-    def _play_comp_move(self):
-        """ Plays computer move and decides further """
-        print('Comp thinking...')
-        self.game.LEAF_COUNT = 0
-        self.game.play_move(self.game.get_best_move(self.game.comp, self.game.comp, 0)[0], self.game.comp)
-        print('Called leaf {} times.'.format(self.game.LEAF_COUNT))
-        self.check_status(self.game.human)
-
-    def play_human_move(self, error=''):
-        """ Takes input from user and plays human move and decides further """
-        print('{}Make your next move...'.format(error))
-        move = str(input())
-        try:
-            self.game.play_move(move, self.game.human)
-        except ValueError:
-            self.play_human_move('Invalid move - ')
-        self.check_status(self.game.comp)
-
-    def check_status(self, next_player):
-        """ Check what should be done after a move and proceeds accordingly """
-        print(self.game.get_board_state_pretty())
-        status, winner = self.game.is_over()
-        if status:
-            if winner:
-                if winner == self.game.human:
-                    print('Impossible!!! How did you beat me...')
-                else:
-                    print('You are no match to me...')
-            else:
-                print('Looks like a draw...')
-            if input('Play again?y/n...\n') == 'y':
-                self.start_game()
-        else:
-            if next_player == self.game.comp:
-                self._play_comp_move()
-            else:
+        success, info = self.gms.start_game(
+            player=kwargs.get('player', 'x'),
+            first_turn=raw_input('Would you like to go first? y/n\n') == 'y'
+        )
+        if success:
+            if info['status_code'] == core_constants.GAME_STATUS_HUMAN_MOVE_REQUIRED:
+                print(self.gms.game.get_board_state_pretty())
                 self.play_human_move()
+        else:
+            print(info['messages'][0])
+
+    def play_human_move(self):
+        """ Takes input from user and plays human move and decides further """
+        success, info = self.gms.play_human_move(raw_input('Make your next move\n'.format('')))
+        if success:
+            print(self.gms.game.get_board_state_pretty())
+            if info['status_code'] == core_constants.GAME_STATUS_HUMAN_MOVE_REQUIRED:
+                self.play_human_move()
+            elif info['status_code'] in [
+                core_constants.GAME_STATUS_OVER_DRAW,
+                core_constants.GAME_STATUS_OVER_HUMAN_WINNER,
+                core_constants.GAME_STATUS_OVER_COMP_WINNER,
+            ]:
+                print(self.gms.status_code_message_map[info['status_code']])
+        else:
+            if info['error_code'] == core_constants.ERROR_CODE_INVALID_MOVE:
+                self.play_human_move()
+
+
+gmc = GameManagerCLI()
+gmc.start_game()

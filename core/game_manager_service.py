@@ -5,6 +5,22 @@ from core.game import Game
 class GameManagerService:
     """ A class to manage a TicTacToe game service """
 
+    status_code_message_map = {
+        core_constants.GAME_STATUS_INIT: 'Game is initializing',
+        core_constants.GAME_STATUS_HUMAN_MOVE_REQUIRED: 'Make your move',
+        core_constants.GAME_STATUS_COMP_MOVE_REQUIRED: 'Computer is thinking',
+        core_constants.GAME_STATUS_OVER_DRAW: 'Looks like a draw',
+        core_constants.GAME_STATUS_OVER_HUMAN_WINNER: 'Impossible! How did you beat me',
+        core_constants.GAME_STATUS_OVER_COMP_WINNER: 'You are no match to me',
+    }
+
+    error_code_message_map = {
+        core_constants.ERROR_CODE_GAME_ALREADY_ACTIVE: 'Game is already running',
+        core_constants.ERROR_CODE_GAME_OVER: 'Game is over.',
+        core_constants.ERROR_CODE_NOT_PLAYER_TURN: 'It\'s not player\'s turn',
+        core_constants.ERROR_CODE_INVALID_MOVE: 'Invalid move'
+    }
+
     def __init__(self, *args, **kwargs):
         self.game = None
         self.status = None
@@ -14,14 +30,14 @@ class GameManagerService:
 
         success, info = False, {}
 
-        if self.status not in [
+        if self.status and self.status not in [
             core_constants.GAME_STATUS_OVER_DRAW,
             core_constants.GAME_STATUS_OVER_COMP_WINNER,
             core_constants.GAME_STATUS_OVER_HUMAN_WINNER
         ]:
             info = {
                 'error_code': core_constants.ERROR_CODE_GAME_ALREADY_ACTIVE,
-                'messages': ['Another game already running']
+                'messages': [self.error_code_message_map[core_constants.ERROR_CODE_GAME_ALREADY_ACTIVE]]
             }
         else:
             self.game = Game(player=player)
@@ -29,7 +45,7 @@ class GameManagerService:
                 self.status = core_constants.GAME_STATUS_HUMAN_MOVE_REQUIRED
                 success, info = True, {
                     'status_code': self.status,
-                    'messages': []
+                    'messages': [self.status_code_message_map[self.status]]
                 }
             else:
                 self.status = core_constants.GAME_STATUS_COMP_MOVE_REQUIRED
@@ -45,17 +61,17 @@ class GameManagerService:
         if self.status != core_constants.GAME_STATUS_HUMAN_MOVE_REQUIRED:
             info = {
                 'error_code': core_constants.ERROR_CODE_NOT_PLAYER_TURN,
-                'messages': ['It\'s not player\'s turn']
+                'messages': [self.error_code_message_map[core_constants.ERROR_CODE_NOT_PLAYER_TURN]]
             }
 
         else:
             try:
                 self.game.play_move(move, self.game.human)
-                success, info = self._check_status(self.game.comp, {'success': success, 'info': info})
+                success, info = self._check_status(self.game.comp)
             except ValueError:
                 info = {
                     'error_code': core_constants.ERROR_CODE_INVALID_MOVE,
-                    'messages': ['Invalid move']
+                    'messages': [self.error_code_message_map[core_constants.ERROR_CODE_INVALID_MOVE]]
                 }
 
         return success, info
@@ -70,7 +86,7 @@ class GameManagerService:
             'messages': []
         }
         # print('Called leaf {} times.'.format(self.game.LEAF_COUNT))
-        return self._check_status(self.game.human, {'success': True, 'info': info})
+        return self._check_status(self.game.human)
 
     def _check_status(self, next_player):
         """ Check what should be done after a move and proceeds accordingly """
@@ -95,7 +111,8 @@ class GameManagerService:
 
         if not info:
             info = {
-                'status_code': self.status
+                'status_code': self.status,
+                'messages': [self.status_code_message_map[self.status]]
             }
 
         return success, info
