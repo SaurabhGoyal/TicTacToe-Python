@@ -25,9 +25,11 @@ df_game_manager_map = {}
 def dialogflow_handler():
 
     req_data = json.loads(request.data)['result']
-    # print(1212, request.data)
+    logger.debug(1212, request.data)
     action = req_data['action']
     parameters = req_data['parameters']
+    gmdf = None
+    expect_user_response = True
     if action == 'start-game':
         user_id = parameters.get('username')
         player_symbol = parameters.get('player-symbol', 'x')
@@ -55,8 +57,18 @@ def dialogflow_handler():
     logger.debug(3333, speech)
     logger.debug(3434, display_text)
 
+    fulfillment_data = {
+        'speech': speech,
+        'displayText': display_text,
+        'data': {
+            'google': {
+                'expect_user_response': bool(gmdf and not gmdf.gms.is_over()),
+            }
+        }
+    }
+
     response = app.response_class(
-        response=json.dumps({'speech': speech, 'displayText': display_text}),
+        response=json.dumps(fulfillment_data),
         status=200,
         mimetype='application/json'
     )

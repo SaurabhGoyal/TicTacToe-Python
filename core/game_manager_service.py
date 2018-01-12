@@ -48,16 +48,19 @@ class GameManagerService:
     def get_last_comp_move_display_text(self):
         return self.get_move_display_text(self.last_comp_move)
 
+    def is_over(self):
+        return self.status in [
+            core_constants.GAME_STATUS_OVER_DRAW,
+            core_constants.GAME_STATUS_OVER_COMP_WINNER,
+            core_constants.GAME_STATUS_OVER_HUMAN_WINNER
+        ]
+
     def start_game(self, player, first_turn, **kwargs):
         """ starts a new game """
 
         success, info = False, {}
 
-        if self.status and self.status not in [
-            core_constants.GAME_STATUS_OVER_DRAW,
-            core_constants.GAME_STATUS_OVER_COMP_WINNER,
-            core_constants.GAME_STATUS_OVER_HUMAN_WINNER
-        ]:
+        if self.status and not self.is_over():
             info = {
                 'error_code': core_constants.ERROR_CODE_GAME_ALREADY_ACTIVE,
                 'messages': [self.error_code_message_map[core_constants.ERROR_CODE_GAME_ALREADY_ACTIVE]]
@@ -87,11 +90,8 @@ class GameManagerService:
                 'messages': [
                     self.error_code_message_map[
                         core_constants.ERROR_CODE_GAME_OVER
-                        if self.status in [
-                            core_constants.GAME_STATUS_OVER_DRAW,
-                            core_constants.GAME_STATUS_OVER_COMP_WINNER,
-                            core_constants.GAME_STATUS_OVER_HUMAN_WINNER
-                        ] else core_constants.ERROR_CODE_NOT_PLAYER_TURN
+                        if self.is_over()
+                        else core_constants.ERROR_CODE_NOT_PLAYER_TURN
                     ]
                 ]
             }

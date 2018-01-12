@@ -35,11 +35,7 @@ class GameManagerDialogFlow:
                 'display_text': self.gms.game.get_board_state_pretty()
             })
             messages.append(self.gms.get_game_status_message())
-            if info['status_code'] in [
-                core_constants.GAME_STATUS_OVER_DRAW,
-                core_constants.GAME_STATUS_OVER_HUMAN_WINNER,
-                core_constants.GAME_STATUS_OVER_COMP_WINNER,
-            ]:
+            if self.gms.is_over():
                 messages.append('We are done here.')
         else:
             messages.extend(info['messages'])
