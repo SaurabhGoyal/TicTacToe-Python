@@ -1,7 +1,7 @@
 class Game:
 
     # Represents a blank cell
-    BLANK_CELL_CHAR = ' '
+    BLANK_CELL_CHAR = '_'
     # To benchmark how-many times execution goes to leaf.
     LEAF_COUNT = 0
 

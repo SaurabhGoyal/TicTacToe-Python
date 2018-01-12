@@ -15,7 +15,10 @@ class GameManagerDialogFlow:
         messages = []
         if success:
             if not first_turn:
-                messages.append(self.gms.game.get_board_state_pretty())
+                messages.append({
+                    'speech': 'I marked {}'.format(self.gms.get_last_comp_move_display_text()),
+                    'display_text': self.gms.game.get_board_state_pretty()
+                })
         else:
             messages.extend(info['messages'])
         messages.append(self.gms.get_game_status_message())
@@ -27,7 +30,10 @@ class GameManagerDialogFlow:
         success, info = self.gms.play_human_move(move)
         messages = []
         if success:
-            messages.append(self.gms.game.get_board_state_pretty())
+            messages.append({
+                'speech': 'I marked {}'.format(self.gms.get_last_comp_move_display_text()),
+                'display_text': self.gms.game.get_board_state_pretty()
+            })
             messages.append(self.gms.get_game_status_message())
             if info['status_code'] in [
                 core_constants.GAME_STATUS_OVER_DRAW,

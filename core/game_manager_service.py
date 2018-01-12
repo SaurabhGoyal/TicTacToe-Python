@@ -5,6 +5,18 @@ from core.game import Game
 class GameManagerService:
     """ A class to manage a TicTacToe game service """
 
+    move_display_value_map = {
+        '00': 'top left',
+        '01': 'top',
+        '02': 'top right',
+        '10': 'left',
+        '11': 'centre',
+        '12': 'right',
+        '20': 'lower left',
+        '21': 'bottom',
+        '22': 'lower right',
+    }
+
     status_code_message_map = {
         core_constants.GAME_STATUS_INIT: 'Game is initializing',
         core_constants.GAME_STATUS_HUMAN_MOVE_REQUIRED: 'Make your move',
@@ -24,9 +36,17 @@ class GameManagerService:
     def __init__(self, *args, **kwargs):
         self.game = None
         self.status = None
+        self.last_comp_move = None
 
     def get_game_status_message(self):
         return self.status_code_message_map[self.status]
+
+    @classmethod
+    def get_move_display_text(cls, move):
+        return cls.move_display_value_map.get(move)
+
+    def get_last_comp_move_display_text(self):
+        return self.get_move_display_text(self.last_comp_move)
 
     def start_game(self, player, first_turn, **kwargs):
         """ starts a new game """
@@ -83,7 +103,9 @@ class GameManagerService:
         """ Plays computer move and decides further """
 
         self.game.LEAF_COUNT = 0
-        self.game.play_move(self.game.get_best_move(self.game.comp, self.game.comp, 0)[0], self.game.comp)
+        best_move = self.game.get_best_move(self.game.comp, self.game.comp, 0)[0]
+        self.game.play_move(best_move, self.game.comp)
+        self.last_comp_move = best_move
         success, info = True, {
             'status_code': self.status,
             'messages': []
