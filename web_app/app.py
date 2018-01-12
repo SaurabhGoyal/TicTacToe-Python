@@ -9,7 +9,6 @@ from game_manager_dialogflow import GameManagerDialogFlow
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
 
-
 app = Flask(__name__)
 game_manager_map = {}
 

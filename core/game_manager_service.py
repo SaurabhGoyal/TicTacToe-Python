@@ -84,7 +84,16 @@ class GameManagerService:
         if self.status != core_constants.GAME_STATUS_HUMAN_MOVE_REQUIRED:
             info = {
                 'error_code': core_constants.ERROR_CODE_NOT_PLAYER_TURN,
-                'messages': [self.error_code_message_map[core_constants.ERROR_CODE_NOT_PLAYER_TURN]]
+                'messages': [
+                    self.error_code_message_map[
+                        core_constants.ERROR_CODE_GAME_OVER
+                        if self.status in [
+                            core_constants.GAME_STATUS_OVER_DRAW,
+                            core_constants.GAME_STATUS_OVER_COMP_WINNER,
+                            core_constants.GAME_STATUS_OVER_HUMAN_WINNER
+                        ] else core_constants.ERROR_CODE_NOT_PLAYER_TURN
+                    ]
+                ]
             }
 
         else:
