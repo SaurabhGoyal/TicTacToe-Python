@@ -1,5 +1,5 @@
-from core import constants as core_constants
-from core.game_manager_service import GameManagerService
+from . import constants as core_constants
+from .game_manager_service import GameManagerService
 
 
 class GameManagerCLI:

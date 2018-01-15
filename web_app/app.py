@@ -3,7 +3,7 @@ import logging
 
 from flask import Flask, request
 
-from game_manager_dialogflow import GameManagerDialogFlow
+from .game_manager_dialogflow import GameManagerDialogFlow
 
 
 logger = logging.getLogger(__name__)

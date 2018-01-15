@@ -1,5 +1,5 @@
-from core import constants as core_constants
-from core.game import Game
+from . import constants as core_constants
+from .game import Game
 
 
 class GameManagerService:
